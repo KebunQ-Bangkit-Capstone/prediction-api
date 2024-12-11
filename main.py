@@ -5,10 +5,9 @@ import uvicorn
 from tensorflow.keras.models import load_model
 from PIL import Image
 from fastapi import FastAPI, Response, UploadFile
+from contextlib import asynccontextmanager
 
 from utils import download_model_from_gcs, preprocess_image
-
-app = FastAPI()
 
 cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL')
 grapeModelUrl = os.getenv('GRAPE_MODEL_URL')
@@ -18,8 +17,8 @@ cucumberModelPath = '/tmp/cucumber_model_bft.h5'
 grapeModelPath = '/tmp/grape_model_1.h5'
 # tomatoModelPath = '/tmp/tomato.h5'
 
-@app.on_event('startup')
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     print("Downloading model from GCS...")
     download_model_from_gcs(cucumberModelUrl, cucumberModelPath)
     download_model_from_gcs(grapeModelUrl, grapeModelPath)
@@ -28,6 +27,8 @@ async def startup_event():
     cucumberModel = load_model(cucumberModelPath)
     grapeModel = load_model(grapeModelPath)
     print("Model loaded successfully!")
+    
+app = FastAPI(lifespan=lifespan)
 
 @app.get('/', status_code=200)
 def index():
