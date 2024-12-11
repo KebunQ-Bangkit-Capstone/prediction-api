@@ -6,24 +6,29 @@ from tensorflow.keras.models import load_model
 from PIL import Image
 from fastapi import FastAPI, Response, UploadFile
 
-from utils import preprocess_image
+from utils import download_model_from_gcs, preprocess_image
 
 app = FastAPI()
 
-cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL')
-grapeModelUrl = os.getenv('GRAPE_MODEL_URL')
+cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL', 'h5/cucumber/cucumber_model_bft.h5')
+grapeModelUrl = os.getenv('GRAPE_MODEL_URL', 'h5/grape/grape_model_1.h5')
 # tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
 
-try:
-    cucumberModel = load_model(cucumberModelUrl)
-    grapeModel = load_model(grapeModelUrl)
-    # tomatoModel = load_model(tomatoModelUrl)
+cucumberModelPath = '/tmp/cucumber_model_bft.h5'
+grapeModelPath = '/tmp/grape_model_1.h5'
+# tomatoModelPath = '/tmp/tomato.h5'
+
+@app.on_event('startup')
+async def startup_event():
+    if not os.path.exists():
+        print("Downloading model from GCS...")
+        download_model_from_gcs(cucumberModelUrl, cucumberModelPath)
+        download_model_from_gcs(grapeModelUrl, grapeModelPath)
+    global cucumberModel
+    global grapeModel
+    cucumberModel = load_model(cucumberModelPath)
+    grapeModel = load_model(grapeModelPath)
     print("Model loaded successfully!")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    cucumberModel = None
-    grapeModel = None
-    # tomatoModel = None
 
 @app.get('/', status_code=200)
 def index():
