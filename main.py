@@ -15,10 +15,6 @@ cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL')
 grapeModelUrl = os.getenv('GRAPE_MODEL_URL')
 # tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
 
-cucumberModelPath = '/tmp/cucumber_model_bft.h5'
-grapeModelPath = '/tmp/grape_model_1.h5'
-# tomatoModelPath = '/tmp/tomato.h5'
-
 cucumber_model = None
 grape_model = None
 # tomato_model = None
@@ -28,13 +24,13 @@ def prepare_model():
     
     global cucumber_model
     global grape_model
-    global tomato_model
+    # global tomato_model
     
-    download_model_from_gcs(cucumberModelUrl, cucumberModelPath)
-    download_model_from_gcs(grapeModelUrl, grapeModelPath)
+    cucumber_model_buffer = download_model_from_gcs(cucumberModelUrl)
+    grape_model_buffer = download_model_from_gcs(grapeModelUrl)
     
-    cucumber_model = load_model(cucumberModelPath)
-    grape_model = load_model(grapeModelPath)
+    cucumber_model = load_model(cucumber_model_buffer)
+    grape_model = load_model(grape_model_buffer)
     
     print("Model loaded successfully!")
     
@@ -50,7 +46,7 @@ def index():
     }
 
 @app.post('/predict/{plant_index}', status_code=200)
-def predict(image: UploadFile, plant_index: int, response: Response):
+async def predict(image: UploadFile, plant_index: int, response: Response):
     if image.content_type not in ["image/jpeg", "image/png"]:
             response.status_code = 400
             return {'error': 'File is not an image'}
@@ -80,9 +76,9 @@ def predict(image: UploadFile, plant_index: int, response: Response):
         
         match plant_index:
             case 0:
-                prediction = cucumberModel.predict(processed_image)
+                prediction = cucumber_model.predict(processed_image)
             case 1:
-                prediction = grapeModel.predict(processed_image)
+                prediction = grape_model.predict(processed_image)
             # case 2:
             #     prediction = tomatoModel.predict(processed_image)
         
