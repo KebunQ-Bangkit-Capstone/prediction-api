@@ -47,7 +47,7 @@ def index():
     }
 
 @app.post('/predict/{plant_index}', status_code=200)
-async def predict(image: UploadFile, plant_index: int, response: Response):
+async def predict(plant_index: int, image: UploadFile, response: Response):
     if image.content_type not in ["image/jpeg", "image/png"]:
             response.status_code = 400
             return {'error': 'File is not an image'}
@@ -55,8 +55,6 @@ async def predict(image: UploadFile, plant_index: int, response: Response):
     if image.filename == '':
         response.status_code = 400
         return {'error': 'No file selected'}
-        
-    print('plant_index: '+plant_index)
     
     if cucumber_model is None:
         response.status_code = 500;
