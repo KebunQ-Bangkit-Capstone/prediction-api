@@ -31,8 +31,8 @@ def prepare_model():
     # download_model_from_gcs(cucumber_model_path, local_cucumber_model_path)
     # download_model_from_gcs(grape_model_path, local_grape_model_path)
         
-    cucumber_model = load_model(local_cucumber_model_path)
-    grape_model = load_model(local_cucumber_model_path)
+    cucumber_model = load_model(local_cucumber_model_path, compile=False)
+    grape_model = load_model(local_cucumber_model_path, compile=False)
         
     print('Model loaded successfully.')
     
