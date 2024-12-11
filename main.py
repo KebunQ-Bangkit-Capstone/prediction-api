@@ -4,11 +4,10 @@ import uvicorn
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.models import load_model
 from PIL import Image
 from fastapi import FastAPI, Response, UploadFile
 
-from utils import download_model_from_gcs, preprocess_image
+from utils import preprocess_image
 
 app = FastAPI()
 
@@ -27,12 +26,12 @@ grape_model = None
 def prepare_model():
     global cucumber_model
     global grape_model
-        
+
     # download_model_from_gcs(cucumber_model_path, local_cucumber_model_path)
     # download_model_from_gcs(grape_model_path, local_grape_model_path)
         
-    cucumber_model = load_model(local_cucumber_model_path, compile=False)
-    grape_model = load_model(local_cucumber_model_path, compile=False)
+    cucumber_model = tf.keras.models.load_model(local_cucumber_model_path)
+    grape_model = tf.keras.models.load_model(local_cucumber_model_path)
         
     print('Model loaded successfully.')
     
@@ -47,54 +46,54 @@ def index():
         # 'tomato_model': tomatoModel is not None
     }
 
-@app.post('/predict/{plant_index}', status_code=200)
-async def predict(image: UploadFile, plant_index: int, response: Response):
-    if image.content_type not in ["image/jpeg", "image/png"]:
-            response.status_code = 400
-            return {'error': 'File is not an image'}
+# @app.post('/predict/{plant_index}', status_code=200)
+# async def predict(image: UploadFile, plant_index: int, response: Response):
+#     if image.content_type not in ["image/jpeg", "image/png"]:
+#             response.status_code = 400
+#             return {'error': 'File is not an image'}
 
-    if image.filename == '':
-        response.status_code = 400
-        return {'error': 'No file selected'}
+#     if image.filename == '':
+#         response.status_code = 400
+#         return {'error': 'No file selected'}
         
-    print('plant_index: '+plant_index)
+#     print('plant_index: '+plant_index)
     
-    if cucumber_model is None:
-        response.status_code = 500;
-        return {'error': 'Cucumber Model not loaded'}
-    if grape_model is None:
-        response.status_code = 500;
-        return {'error': 'Grape Model not loaded'}
-    # if tomatoModel is None:
-    #     response.status_code = 500;
-    #     return {'error': 'Tomato Model not loaded'}
+#     if cucumber_model is None:
+#         response.status_code = 500;
+#         return {'error': 'Cucumber Model not loaded'}
+#     if grape_model is None:
+#         response.status_code = 500;
+#         return {'error': 'Grape Model not loaded'}
+#     # if tomatoModel is None:
+#     #     response.status_code = 500;
+#     #     return {'error': 'Tomato Model not loaded'}
     
-    try:
-        image = Image.open(io.BytesIO(image.read()))
+#     try:
+#         image = Image.open(io.BytesIO(image.read()))
         
-        processed_image = preprocess_image(image)
+#         processed_image = preprocess_image(image)
         
-        prediction = None
+#         prediction = None
         
-        match plant_index:
-            case 0:
-                prediction = cucumber_model.predict(processed_image)
-            case 1:
-                prediction = grape_model.predict(processed_image)
-            # case 2:
-            #     prediction = tomatoModel.predict(processed_image)
+#         match plant_index:
+#             case 0:
+#                 prediction = cucumber_model.predict(processed_image)
+#             case 1:
+#                 prediction = grape_model.predict(processed_image)
+#             # case 2:
+#             #     prediction = tomatoModel.predict(processed_image)
         
-        predicted_class = np.argmax(prediction, axis=1)[0]
-        confidence = float(np.max(prediction))
+#         predicted_class = np.argmax(prediction, axis=1)[0]
+#         confidence = float(np.max(prediction))
         
-        return {
-            'class': int(predicted_class),
-            'confidence_score': confidence
-        }
+#         return {
+#             'class': int(predicted_class),
+#             'confidence_score': confidence
+#         }
     
-    except Exception as e:
-        response.status_code = 400
-        return {'error': str(e)}
+#     except Exception as e:
+#         response.status_code = 400
+#         return {'error': str(e)}
 
 
 port = os.environ.get("PORT", 5000)
