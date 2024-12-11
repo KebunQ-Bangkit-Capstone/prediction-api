@@ -4,34 +4,28 @@ import uvicorn
 
 import numpy as np
 import tensorflow as tf
-from PIL import Image
 from fastapi import FastAPI, Response, UploadFile
 
 from utils import preprocess_image
 
 app = FastAPI()
 
-cucumber_model_path = os.getenv('CUCUMBER_MODEL_URL')
-grape_model_path = os.getenv('GRAPE_MODEL_URL')
-# tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
-
 local_cucumber_model_path = 'models/cucumber_model.h5'
 local_grape_model_path = 'models/grape_model.h5'
-# localCucumberModelPath = '/models/cucumber.h5'
+localCucumberModelPath = '/models/tomato_model.h5'
 
 cucumber_model = None
 grape_model = None
-# tomato_model = None
+tomato_model = None
 
 def prepare_model():
     global cucumber_model
     global grape_model
-
-    # download_model_from_gcs(cucumber_model_path, local_cucumber_model_path)
-    # download_model_from_gcs(grape_model_path, local_grape_model_path)
+    global tomato_model
         
     cucumber_model = tf.keras.models.load_model(local_cucumber_model_path)
     grape_model = tf.keras.models.load_model(local_cucumber_model_path)
+    tomato_model = tf.keras.models.load_model(local_cucumber_model_path)
         
     print('Model loaded successfully.')
     
@@ -43,14 +37,14 @@ def index():
         'status': 'healthy',
         'cucumber_model': cucumber_model is not None,
         'grape_model': grape_model is not None,
-        # 'tomato_model': tomatoModel is not None
+        'tomato_model': tomato_model is not None
     }
 
 @app.post('/predict/{plant_index}', status_code=200)
 async def predict(plant_index: int, image: UploadFile, response: Response):
     if image.content_type not in ["image/jpeg", "image/png"]:
-            response.status_code = 400
-            return {'error': 'File is not an image'}
+        response.status_code = 400
+        return {'error': 'File is not an image'}
 
     if image.filename == '':
         response.status_code = 400
@@ -62,12 +56,12 @@ async def predict(plant_index: int, image: UploadFile, response: Response):
     if grape_model is None:
         response.status_code = 500;
         return {'error': 'Grape Model not loaded'}
-    # if tomatoModel is None:
-    #     response.status_code = 500;
-    #     return {'error': 'Tomato Model not loaded'}
+    if tomato_model is None:
+        response.status_code = 500;
+        return {'error': 'Tomato Model not loaded'}
     
     try:
-        image = Image.open(io.BytesIO(image.read()))
+        image = await image.read()
         
         processed_image = preprocess_image(image)
         
@@ -78,8 +72,8 @@ async def predict(plant_index: int, image: UploadFile, response: Response):
                 prediction = cucumber_model.predict(processed_image)
             case 1:
                 prediction = grape_model.predict(processed_image)
-            # case 2:
-            #     prediction = tomatoModel.predict(processed_image)
+            case 2:
+                prediction = tomato_model.predict(processed_image)
         
         predicted_class = np.argmax(prediction, axis=1)[0]
         confidence = float(np.max(prediction))

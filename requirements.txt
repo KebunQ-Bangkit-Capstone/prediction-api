@@ -1,9 +1,6 @@
 flask
 flask-cors
 gunicorn
-tensorflow
-numpy
-google-cloud-storage
 fastapi
 pydantic
 uvicorn[standard]
