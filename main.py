@@ -9,6 +9,8 @@ from contextlib import asynccontextmanager
 
 from utils import download_model_from_gcs, preprocess_image
 
+app = FastAPI()
+
 cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL')
 grapeModelUrl = os.getenv('GRAPE_MODEL_URL')
 # tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
@@ -17,25 +19,33 @@ cucumberModelPath = '/tmp/cucumber_model_bft.h5'
 grapeModelPath = '/tmp/grape_model_1.h5'
 # tomatoModelPath = '/tmp/tomato.h5'
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+cucumber_model = None
+grape_model = None
+# tomato_model = None
+
+def prepare_model():
     print("Downloading model from GCS...")
+    
+    global cucumber_model
+    global grape_model
+    global tomato_model
+    
     download_model_from_gcs(cucumberModelUrl, cucumberModelPath)
     download_model_from_gcs(grapeModelUrl, grapeModelPath)
-    global cucumberModel
-    global grapeModel
-    cucumberModel = load_model(cucumberModelPath)
-    grapeModel = load_model(grapeModelPath)
+    
+    cucumber_model = load_model(cucumberModelPath)
+    grape_model = load_model(grapeModelPath)
+    
     print("Model loaded successfully!")
     
-app = FastAPI(lifespan=lifespan)
+prepare_model()
 
 @app.get('/', status_code=200)
 def index():
     return {
         'status': 'healthy',
-        'cucumber_model': cucumberModel is not None,
-        'grape_model': grapeModel is not None,
+        'cucumber_model': cucumber_model is not None,
+        'grape_model': grape_model is not None,
         # 'tomato_model': tomatoModel is not None
     }
 
@@ -51,10 +61,10 @@ def predict(image: UploadFile, plant_index: int, response: Response):
         
     print('plant_index: '+plant_index)
     
-    if cucumberModel is None:
+    if cucumber_model is None:
         response.status_code = 500;
         return {'error': 'Cucumber Model not loaded'}
-    if grapeModel is None:
+    if grape_model is None:
         response.status_code = 500;
         return {'error': 'Grape Model not loaded'}
     # if tomatoModel is None:
