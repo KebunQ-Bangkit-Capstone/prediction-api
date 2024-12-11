@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from PIL import Image
 from fastapi import FastAPI, Response, UploadFile
+import tempfile
 
 from utils import download_model_from_gcs, preprocess_image
 
@@ -26,13 +27,18 @@ def prepare_model():
     global grape_model
     # global tomato_model
     
-    cucumber_model_buffer = download_model_from_gcs(cucumberModelUrl)
-    grape_model_buffer = download_model_from_gcs(grapeModelUrl)
+    cucumber_model_bytes = download_model_from_gcs(cucumberModelUrl)
+    grape_model_bytes = download_model_from_gcs(grapeModelUrl)
     
-    with tf.io.gfile.GFile(cucumber_model_buffer, 'rb') as f:
-            cucumber_model = load_model(f)
-    with tf.io.gfile.GFile(grape_model_buffer, 'rb') as f:
-            grape_model = load_model(f)
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(cucumber_model_bytes)
+            cucumber_file_path = temp_file.name
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(grape_model_bytes)
+            grape_file_path = temp_file.name
+            
+    cucumber_model = load_model(cucumber_file_path)
+    grape_model = load_model(grape_file_path)
     
     print("Model loaded successfully!")
     

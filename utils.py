@@ -12,4 +12,4 @@ def download_model_from_gcs(source_blob_name: str):
     bucket = storage_client.bucket('kebunq-ml-model')
     blob = bucket.blob(source_blob_name)
     model_bytes = blob.download_as_bytes()
-    return io.BytesIO(model_bytes)
+    return model_bytes
