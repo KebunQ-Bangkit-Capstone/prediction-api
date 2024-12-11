@@ -12,18 +12,18 @@ app = FastAPI()
 
 cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL')
 grapeModelUrl = os.getenv('GRAPE_MODEL_URL')
-tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
+# tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
 
 try:
     cucumberModel = load_model(cucumberModelUrl)
     grapeModel = load_model(grapeModelUrl)
-    tomatoModel = load_model(tomatoModelUrl)
+    # tomatoModel = load_model(tomatoModelUrl)
     print("Model loaded successfully!")
 except Exception as e:
     print(f"Error loading model: {e}")
     cucumberModel = None
     grapeModel = None
-    tomatoModel = None
+    # tomatoModel = None
 
 @app.get('/', status_code=200)
 def index():
@@ -31,7 +31,7 @@ def index():
         'status': 'healthy',
         'cucumber_model': cucumberModel is not None,
         'grape_model': grapeModel is not None,
-        'tomato_model': tomatoModel is not None
+        # 'tomato_model': tomatoModel is not None
     }
 
 @app.post('/predict/{plant_index}', status_code=200)
@@ -52,9 +52,9 @@ def predict(image: UploadFile, plant_index: int, response: Response):
     if grapeModel is None:
         response.status_code = 500;
         return {'error': 'Grape Model not loaded'}
-    if tomatoModel is None:
-        response.status_code = 500;
-        return {'error': 'Tomato Model not loaded'}
+    # if tomatoModel is None:
+    #     response.status_code = 500;
+    #     return {'error': 'Tomato Model not loaded'}
     
     try:
         image = Image.open(io.BytesIO(image.read()))
@@ -68,8 +68,8 @@ def predict(image: UploadFile, plant_index: int, response: Response):
                 prediction = cucumberModel.predict(processed_image)
             case 1:
                 prediction = grapeModel.predict(processed_image)
-            case 2:
-                prediction = tomatoModel.predict(processed_image)
+            # case 2:
+            #     prediction = tomatoModel.predict(processed_image)
         
         predictionList = None if prediction is None else prediction.tolist()
         
