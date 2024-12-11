@@ -1,14 +1,14 @@
 import os
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import io
+import uvicorn
+
 from tensorflow.keras.models import load_model
 from PIL import Image
-import io
+from fastapi import FastAPI, Response, UploadFile
 
 from utils import preprocess_image
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI()
 
 cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL')
 grapeModelUrl = os.getenv('GRAPE_MODEL_URL')
@@ -25,36 +25,39 @@ except Exception as e:
     grapeModel = None
     tomatoModel = None
 
-@app.route('/', methods=['GET'])
+@app.get('/', status_code=200)
 def index():
-    return jsonify({
+    return {
         'status': 'healthy',
         'cucumber_model': cucumberModel is not None,
         'grape_model': grapeModel is not None,
         'tomato_model': tomatoModel is not None
-    })
+    }
 
-@app.route('/predict/<int:plant_index>', methods=['POST'])
-def predict(plant_index):
+@app.post('/predict/{plant_index}', status_code=200)
+def predict(image: UploadFile, plant_index: int, response: Response):
+    if image.content_type not in ["image/jpeg", "image/png"]:
+            response.status_code = 400
+            return {'error': 'File is not an image'}
+
+    if image.filename == '':
+        response.status_code = 400
+        return {'error': 'No file selected'}
+        
     print('plant_index: '+plant_index)
     
     if cucumberModel is None:
-        return jsonify({'error': 'Cucumber Model not loaded'}), 500
+        response.status_code = 500;
+        return {'error': 'Cucumber Model not loaded'}
     if grapeModel is None:
-        return jsonify({'error': 'Grape Model not loaded'}), 500
+        response.status_code = 500;
+        return {'error': 'Grape Model not loaded'}
     if tomatoModel is None:
-        return jsonify({'error': 'Tomato Model not loaded'}), 500
-    
-    if 'image' not in request.files:
-            return jsonify({'error': 'No image provided'}), 400
-        
-    file = request.files['image']
-        
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
+        response.status_code = 500;
+        return {'error': 'Tomato Model not loaded'}
     
     try:
-        image = Image.open(io.BytesIO(file.read()))
+        image = Image.open(io.BytesIO(image.read()))
         
         processed_image = preprocess_image(image)
         
@@ -70,12 +73,15 @@ def predict(plant_index):
         
         predictionList = None if prediction is None else prediction.tolist()
         
-        return jsonify({
+        return {
             'prediction': predictionList
-        })
+        }
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        response.status_code = 400
+        return {'error': str(e)}
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+
+port = os.environ.get("PORT", 5000)
+print(f"Listening to http://0.0.0.0:{port}")
+uvicorn.run(app, host='0.0.0.0',port=port)
