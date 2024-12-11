@@ -11,7 +11,7 @@ app = FastAPI()
 
 local_cucumber_model_path = 'models/cucumber_model.h5'
 local_grape_model_path = 'models/grape_model.h5'
-localCucumberModelPath = '/models/tomato_model.h5'
+local_tomato_model_path = '/models/tomato_model.h5'
 
 cucumber_model = None
 grape_model = None
@@ -23,8 +23,8 @@ def prepare_model():
     global tomato_model
         
     cucumber_model = tf.keras.models.load_model(local_cucumber_model_path)
-    grape_model = tf.keras.models.load_model(local_cucumber_model_path)
-    tomato_model = tf.keras.models.load_model(local_cucumber_model_path)
+    grape_model = tf.keras.models.load_model(local_grape_model_path)
+    tomato_model = tf.keras.models.load_model(local_tomato_model_path)
         
     print('Model loaded successfully.')
     
@@ -78,8 +78,7 @@ async def predict(plant_index: int, image: UploadFile, response: Response):
         
         return {
             'class': int(predicted_class),
-            'confidence_score': confidence,
-            'prediction': prediction.tolist()
+            'confidence_score': confidence
         }
     
     except Exception as e:
