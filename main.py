@@ -10,8 +10,8 @@ from utils import download_model_from_gcs, preprocess_image
 
 app = FastAPI()
 
-cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL', 'h5/cucumber/cucumber_model_bft.h5')
-grapeModelUrl = os.getenv('GRAPE_MODEL_URL', 'h5/grape/grape_model_1.h5')
+cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL')
+grapeModelUrl = os.getenv('GRAPE_MODEL_URL')
 # tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
 
 cucumberModelPath = '/tmp/cucumber_model_bft.h5'
@@ -20,10 +20,9 @@ grapeModelPath = '/tmp/grape_model_1.h5'
 
 @app.on_event('startup')
 async def startup_event():
-    if not os.path.exists():
-        print("Downloading model from GCS...")
-        download_model_from_gcs(cucumberModelUrl, cucumberModelPath)
-        download_model_from_gcs(grapeModelUrl, grapeModelPath)
+    print("Downloading model from GCS...")
+    download_model_from_gcs(cucumberModelUrl, cucumberModelPath)
+    download_model_from_gcs(grapeModelUrl, grapeModelPath)
     global cucumberModel
     global grapeModel
     cucumberModel = load_model(cucumberModelPath)
