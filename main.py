@@ -11,7 +11,7 @@ app = FastAPI()
 
 local_cucumber_model_path = 'models/cucumber_model.h5'
 local_grape_model_path = 'models/grape_model.h5'
-local_tomato_model_path = '/models/tomato_model.h5'
+local_tomato_model_path = 'models/tomato_model.h5'
 
 cucumber_model = None
 grape_model = None
