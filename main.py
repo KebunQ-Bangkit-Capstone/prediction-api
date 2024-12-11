@@ -30,12 +30,12 @@ def prepare_model():
     cucumber_model_bytes = download_model_from_gcs(cucumberModelUrl)
     grape_model_bytes = download_model_from_gcs(grapeModelUrl)
     
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as temp_file:
             temp_file.write(cucumber_model_bytes)
             cucumber_file_path = temp_file.name
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as temp_file:
             temp_file.write(grape_model_bytes)
-            grape_file_path = temp_file.name
+            grape_file_path = temp_file
             
     cucumber_model = load_model(cucumber_file_path)
     grape_model = load_model(grape_file_path)
