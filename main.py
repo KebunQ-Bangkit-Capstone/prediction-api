@@ -2,6 +2,7 @@ import os
 import io
 import uvicorn
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from PIL import Image
@@ -83,10 +84,12 @@ async def predict(image: UploadFile, plant_index: int, response: Response):
             # case 2:
             #     prediction = tomatoModel.predict(processed_image)
         
-        predictionList = None if prediction is None else prediction.tolist()
+        predicted_class = np.argmax(prediction, axis=1)[0]
+        confidence = float(np.max(prediction))
         
         return {
-            'prediction': predictionList
+            'class': int(predicted_class),
+            'confidence_score': confidence
         }
     
     except Exception as e:
