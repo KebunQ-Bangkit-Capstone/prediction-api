@@ -15,9 +15,9 @@ cucumber_model_path = os.getenv('CUCUMBER_MODEL_URL')
 grape_model_path = os.getenv('GRAPE_MODEL_URL')
 # tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
 
-local_cucumber_model_path = '/tmp/cucumber.h5'
-local_grape_model_path = '/tmp/grape.h5'
-# localCucumberModelPath = '/tmp/cucumber.h5'
+local_cucumber_model_path = 'models/cucumber_model.h5'
+local_grape_model_path = 'models/grape_model.h5'
+# localCucumberModelPath = '/models/cucumber.h5'
 
 cucumber_model = None
 grape_model = None
@@ -27,8 +27,8 @@ def prepare_model():
     global cucumber_model
     global grape_model
         
-    download_model_from_gcs(cucumber_model_path, local_cucumber_model_path)
-    download_model_from_gcs(grape_model_path, local_grape_model_path)
+    # download_model_from_gcs(cucumber_model_path, local_cucumber_model_path)
+    # download_model_from_gcs(grape_model_path, local_grape_model_path)
         
     cucumber_model = load_model(local_cucumber_model_path)
     grape_model = load_model(local_cucumber_model_path)
