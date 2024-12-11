@@ -2,10 +2,10 @@ import os
 import io
 import uvicorn
 
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from PIL import Image
 from fastapi import FastAPI, Response, UploadFile
-from contextlib import asynccontextmanager
 
 from utils import download_model_from_gcs, preprocess_image
 
@@ -29,8 +29,10 @@ def prepare_model():
     cucumber_model_buffer = download_model_from_gcs(cucumberModelUrl)
     grape_model_buffer = download_model_from_gcs(grapeModelUrl)
     
-    cucumber_model = load_model(cucumber_model_buffer)
-    grape_model = load_model(grape_model_buffer)
+    with tf.io.gfile.GFile(cucumber_model_buffer, 'rb') as f:
+            cucumber_model = load_model(f)
+    with tf.io.gfile.GFile(grape_model_buffer, 'rb') as f:
+            grape_model = load_model(f)
     
     print("Model loaded successfully!")
     
