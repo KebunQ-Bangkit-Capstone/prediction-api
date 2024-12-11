@@ -1,5 +1,4 @@
 import os
-import io
 import uvicorn
 
 import numpy as np
@@ -67,20 +66,20 @@ async def predict(plant_index: int, image: UploadFile, response: Response):
         
         prediction = None
         
-        match plant_index:
-            case 0:
-                prediction = cucumber_model.predict(processed_image)
-            case 1:
-                prediction = grape_model.predict(processed_image)
-            case 2:
-                prediction = tomato_model.predict(processed_image)
+        if plant_index == 0:
+            prediction = cucumber_model.predict(processed_image)
+        elif plant_index == 1:
+            prediction = grape_model.predict(processed_image)
+        elif plant_index == 2:
+            prediction = tomato_model.predict(processed_image)
         
         predicted_class = np.argmax(prediction, axis=1)[0]
         confidence = float(np.max(prediction))
         
         return {
             'class': int(predicted_class),
-            'confidence_score': confidence
+            'confidence_score': confidence,
+            'prediction': prediction.tolist()
         }
     
     except Exception as e:
