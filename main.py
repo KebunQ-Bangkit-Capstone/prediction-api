@@ -6,41 +6,34 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from PIL import Image
 from fastapi import FastAPI, Response, UploadFile
-import tempfile
 
 from utils import download_model_from_gcs, preprocess_image
 
 app = FastAPI()
 
-cucumberModelUrl = os.getenv('CUCUMBER_MODEL_URL')
-grapeModelUrl = os.getenv('GRAPE_MODEL_URL')
+cucumber_model_path = os.getenv('CUCUMBER_MODEL_URL')
+grape_model_path = os.getenv('GRAPE_MODEL_URL')
 # tomatoModelUrl = os.getenv('TOMATO_MODEL_URL')
+
+local_cucumber_model_path = '/tmp/cucumber.h5'
+local_grape_model_path = '/tmp/grape.h5'
+# localCucumberModelPath = '/tmp/cucumber.h5'
 
 cucumber_model = None
 grape_model = None
 # tomato_model = None
 
 def prepare_model():
-    print("Downloading model from GCS...")
-    
     global cucumber_model
     global grape_model
-    # global tomato_model
-    
-    cucumber_model_bytes = download_model_from_gcs(cucumberModelUrl)
-    grape_model_bytes = download_model_from_gcs(grapeModelUrl)
-    
-    with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as temp_file:
-            temp_file.write(cucumber_model_bytes)
-            cucumber_file_path = temp_file.name
-    with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as temp_file:
-            temp_file.write(grape_model_bytes)
-            grape_file_path = temp_file
-            
-    cucumber_model = load_model(cucumber_file_path)
-    grape_model = load_model(grape_file_path)
-    
-    print("Model loaded successfully!")
+        
+    download_model_from_gcs(cucumber_model_path, local_cucumber_model_path)
+    download_model_from_gcs(grape_model_path, local_grape_model_path)
+        
+    cucumber_model = load_model(local_cucumber_model_path)
+    grape_model = load_model(local_cucumber_model_path)
+        
+    print('Model loaded successfully.')
     
 prepare_model()
 
